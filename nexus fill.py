@@ -5,21 +5,24 @@ import xml.dom.minidom
 def upload(path):
         global index
         index=index+1
-        # Open XML document using minidom parser
-        DOMTree = xml.dom.minidom.parse(path)
-        proj = DOMTree.documentElement
-        ai=proj.getElementsByTagName('artifactId')[0].childNodes[0].data
-        gi=proj.getElementsByTagName('groupId')[0].childNodes[0].data
-        ve=proj.getElementsByTagName('version')[0].childNodes[0].data
-        ja=path.replace(".pom",".jar")
-        ex= os.path.isfile(ja)
-        #print ("name : " + str(ai)+ " group : " + str(gi)+" version : " + str(ve)+ " jar:"+ja+" "+str(ex))
-        if ex:
-           comm="C:\\maven\\bin\\mvn deploy:deploy-file -DgroupId="+gi+" -DartifactId="+ai+" -Dversion="+ve+" -Dpackaging=jar \"-Dfile="+ja+"\" -DgeneratePom=true -Durl=http://lpr462:8080/nexus-2.5/content/repositories/ESBrepository/ -DrepositoryId=ESBrepository "
-           print (str(index)+" ***"+str(subprocess.call(comm,shell=True))+" "+comm)
-        else:
-           print (str(index)+" ***1 not found jar"+ja)     
-
+        try:
+                # Open XML document using minidom parser
+                DOMTree = xml.dom.minidom.parse(path)
+                proj = DOMTree.documentElement
+                ai=proj.getElementsByTagName('artifactId')[0].childNodes[0].data.strip()
+                gi=proj.getElementsByTagName('groupId')[0].childNodes[0].data.strip()
+                ve=proj.getElementsByTagName('version')[0].childNodes[0].data.strip()
+                ja=path.replace(".pom",".jar")
+                ex= os.path.isfile(ja) and os.path.isfile(path)
+                #print ("name : " + str(ai)+ " group : " + str(gi)+" version : " + str(ve)+ " jar:"+ja+" "+str(ex)) #-DgeneratePom=false
+                if ex:
+                   comm="C:\\maven\\bin\\mvn deploy:deploy-file -DgroupId="+gi+" -DartifactId="+ai+" -Dversion="+ve+" -Dpackaging=jar \"-Dfile="+ja+"\"  \"-DpomFile="+path+"\" -Durl=http://lpr462:8080/nexus-2.5/content/repositories/ESBrepository/ -DrepositoryId=ESBrepository "
+                   print (str(index)+" ***"+str(subprocess.call(comm,shell=True))+" "+comm)
+                else:
+                   print (str(index)+" ***1 not found jar"+ja)     
+        except Exception:
+                print (str(index)+" ***2 Exception with"+path)
+           
 def Scan(PathFor,Pattern):
         #list = []
         #print('start scan:'+PathFor)
@@ -32,7 +35,7 @@ def Scan(PathFor,Pattern):
                # print("Analise for file:"+path+ " MAtch result:"+str(re.match(Pattern,path)))
                 if re.match(Pattern,file):
                         #print(PathFor+" *** "+file )
-                        upload(path)
+                        upload(path.strip())
             else:
                 #list.append(GetListForBackup(path))
                 Scan(path,Pattern)
@@ -40,5 +43,7 @@ def Scan(PathFor,Pattern):
 
 
 index=0
-Scan("C:\\pathtom2",".*pom$")
+
+#Scan("C:\\Users\\kononov446\\.m2\\repository",".*pom$")
+Scan("U:\\Group\\Обмен данными\\УИ\\repository",".*pom$")
 print('finished')
